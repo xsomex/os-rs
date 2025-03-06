@@ -1,0 +1,8 @@
+[package]
+name = "display_text__processor_graphics"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+display_text_interface = { path = "../interface/" }
+common = { path = "../../../common/" }

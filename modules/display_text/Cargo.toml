@@ -1,0 +1,11 @@
+[package]
+name = "display_text"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+display_text_interface = { path = "./interface/" }
+display_text__processor_graphics = { path = "./processor_graphics/", optional = true }
+
+[features]
+processor_graphics = ["dep:display_text__processor_graphics"]

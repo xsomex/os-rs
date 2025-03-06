@@ -1,0 +1,9 @@
+[package]
+name = "kernel"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+common = { path = "../common/" }
+
+display_text = { path = "../modules/display_text/", features = ["processor_graphics"] }
