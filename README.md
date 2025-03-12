@@ -16,5 +16,5 @@ UEFI boot. They are located on the bootable/ folder.
 ## branches
 
 The `main` branch should work. It doesn't mean that all features you will find are fully implemented, but that you
-are not supposed to encounter any bug. Other branch can be the developement of a new module. They will looks like
-m_<module name>.
+are not supposed to encounter any bug. Other branch can be the developement of a new module. They will look like 
+m_module-name.
