@@ -1,12 +1,22 @@
 # OS
 
-An OS coded in Rust. Use `cargo build` to generate disk image and `cargo run` to run it on QEMU.
+An OS coded in Rust.
+
+## How to run it ?
+
+1. Install NixOS and enable flakes.
+
+2. Run `nix flake update && nix develop`.
+
+3. Run `cargo build` or `cargo run`.
 
 ## kernel & modules
 
 The main crate of this project is the `kernel` crate, this is the entry point of the OS. The kernel does nothing
 by itself: you add modules to him. Each module has a `init` function, which takes some arguments, but all the 
 values that it needs are store in `static`s into the crate. Modules can use other modules.
+
+You can find (sometimes), the module documentation into its folder.
 
 ## bootloader
 
