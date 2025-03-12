@@ -115,24 +115,11 @@ checksum = "19d374276b40fb8bbdee95aef7c7fa6b5316ec764510eb64b8dd0e2ed0d7e7f5"
 name = "display_text"
 version = "0.0.0"
 dependencies = [
- "display_text__processor_graphics",
- "display_text_interface",
-]
-
-[[package]]
-name = "display_text__processor_graphics"
-version = "0.0.0"
-dependencies = [
  "bootloader_api",
- "display_text_interface",
  "lazy_static",
  "spin",
  "x86_64",
 ]
-
-[[package]]
-name = "display_text_interface"
-version = "0.0.0"
 
 [[package]]
 name = "errno"
