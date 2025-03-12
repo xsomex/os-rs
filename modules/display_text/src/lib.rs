@@ -1,57 +1,41 @@
 #![no_std]
 
-pub use display_text_interface::{DisplayText, ReturnMode};
+/// processor graphics
+#[cfg(feature = "processor_graphics")]
+mod processor_graphics;
+#[cfg(feature = "processor_graphics")]
+pub use processor_graphics::*;
+
+// Common display_text interface. 
+// This code is included in all cases, and it should be the only part of the crate used when
+// display_text is needed. If a module wants to provide a display_text interface (a display modules
+// for example, the display_text crate should be used with no feature.
+
+pub mod macros;
 
 pub use core::fmt::Write;
 
-#[cfg(feature = "processor_graphics")]
-use display_text__processor_graphics as display_text_impl;
+#[derive(Debug)]
+pub struct IndexOutOfRange;
 
-#[cfg(any(feature = "processor_graphics"))]
-pub use display_text_impl::{DisplayTextManager, init, DISPLAY_TEXT};
-
-#[macro_export]
-macro_rules! print {
-    ($($arg:tt)*) => (DISPLAY_TEXT.lock().write_fmt(format_args!($($arg)*)).unwrap())
+pub enum ReturnMode {
+    None,
+    FollowText,
+    SameLine,
+    SameCol,
 }
 
-#[macro_export]
-macro_rules! println {
-    () => ($crate::print!("\n"));
-    ($($arg:tt)*) => (display_text::print!("{}\n", format_args!($($arg)*)));
-}
+pub trait DisplayText
+where
+    Self: core::fmt::Write,
+{
+    fn set_foreground_color(&mut self, color: (u8, u8, u8));
+    fn set_background_color(&mut self, color: (u8, u8, u8));
+    fn fill(&mut self, color: (u8, u8, u8));
+    fn goto(&mut self, x: usize, y: usize) -> Result<(), IndexOutOfRange>;
 
-#[macro_export]
-macro_rules! set_foreground_color {
-    ($r: expr, $v: expr, $b: expr) => {
-        DISPLAY_TEXT.lock().set_foreground_color(($r, $v, $b))
-    };
-}
-
-#[macro_export]
-macro_rules! set_background_color {
-    ($r: expr, $v: expr, $b: expr) => {
-        DISPLAY_TEXT.lock().set_background_color(($r, $v, $b))
-    };
-}
-
-#[macro_export]
-macro_rules! set_color_default {
-    () => {
-        display_text::set_foreground_color!(255, 255, 255);
-        display_text::set_background_color!(0, 0, 0);
-    };
-}
-
-#[macro_export]
-macro_rules! fill {
-    ($r: expr, $v: expr, $b: expr) => {DISPLAY_TEXT.lock().fill(($r, $v, $b))};
-}
-
-#[macro_export]
-macro_rules! move_cursor {
-    (left $count:expr) => {DISPLAY_TEXT.lock().move_left(count, display_text::ReturnMode::None)};
-    (right $count:expr) => {DISPLAY_TEXT.lock().move_right(count, display_text::ReturnMode::None)};
-    (up $count:expr) => {DISPLAY_TEXT.lock().move_up(count, display_text::ReturnMode::None)};
-    (down $count:expr) => {DISPLAY_TEXT.lock().move_down(count, display_text::ReturnMode::None)};
+    fn move_left(&mut self, count: usize, return_mode: ReturnMode) -> Result<(), IndexOutOfRange>;
+    fn move_right(&mut self, count: usize, return_mode: ReturnMode) -> Result<(), IndexOutOfRange>;
+    fn move_up(&mut self, count: usize, return_mode: ReturnMode) -> Result<(), IndexOutOfRange>;
+    fn move_down(&mut self, count: usize, return_mode: ReturnMode) -> Result<(), IndexOutOfRange>;
 }
