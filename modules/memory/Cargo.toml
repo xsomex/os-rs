@@ -1,6 +1,6 @@
 [package]
-name = "kernel"
-version = "0.0.0"
+name = "memory"
+version = "0.1.0"
 edition = "2024"
 
 [dependencies]
@@ -9,5 +9,5 @@ lazy_static.workspace = true
 bootloader_api.workspace = true
 x86_64.workspace = true
 
-display_text.workspace = true
-memory.workspace = true
+[features]
+paging4_recursive = []
