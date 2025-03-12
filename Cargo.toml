@@ -1,0 +1,30 @@
+[package]
+name = "os"
+version = "0.0.0"
+edition = "2024"
+
+#cargo-features = [ "artifact dependencies"]
+
+[workspace]
+members = [
+	"kernel/",
+
+	"modules/display_text/",
+	"modules/display_text/interface/",
+	"modules/display_text/processor_graphics/",
+]
+
+[workspace.dependencies]
+bootloader_api="0.11.10"
+x86_64 = "0.15.2"
+spin = "0.9.8"
+lazy_static = {version = "1.5.0", features = ["spin_no_std"] }
+
+display_text = { path = "./modules/display_text/", features = ["processor_graphics"] }
+
+[build-dependencies]
+kernel = { path = "./kernel/", artifact = "bin", target = "x86_64-unknown-none" }
+bootloader = "0.11.10"
+
+[dependencies]
+ovmf-prebuilt = "0.1.0-alpha.1"

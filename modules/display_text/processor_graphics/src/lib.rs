@@ -5,8 +5,7 @@ use bootloader_api::{
     BootInfo,
     info::{FrameBufferInfo, PixelFormat},
 };
-use common::*;
-use core::{error::Error, fmt, ptr::null_mut};
+use core::{fmt, ptr::null_mut};
 use spin::Mutex;
 use display_text_interface::{IndexOutOfRange, DisplayText};
 

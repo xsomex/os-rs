@@ -4,7 +4,6 @@
 #![feature(sync_unsafe_cell, abi_x86_interrupt)]
 
 use kernel::*;
-use common::*;
 use bootloader_api::{BootloaderConfig, config::Mapping, BootInfo, entry_point};
 
 const CONFIG: BootloaderConfig = {

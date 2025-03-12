@@ -4,6 +4,9 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-common = { path = "../common/" }
+spin.workspace = true
+lazy_static.workspace = true
+bootloader_api.workspace = true
+x86_64.workspace = true
 
-display_text = { path = "../modules/display_text/", features = ["processor_graphics"] }
+display_text.workspace = true
