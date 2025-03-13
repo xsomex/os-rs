@@ -26,6 +26,7 @@ fn main() {
         );
         cmd.arg("-drive")
             .arg(format!("format=raw,file={uefi_path}"));
+        cmd.args(["-serial", "stdio"]);
     } else {
         cmd.arg("-drive")
             .arg(format!("format=raw,file={bios_path}"));

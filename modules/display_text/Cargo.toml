@@ -7,7 +7,6 @@ edition = "2024"
 spin.workspace = true
 lazy_static.workspace = true
 bootloader_api.workspace = true
-x86_64.workspace = true
 
 [features]
 processor_graphics = []
