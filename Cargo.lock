@@ -326,7 +326,7 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "kernel"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "bootloader_api",
  "display_text",
@@ -435,7 +435,7 @@ checksum = "cde51589ab56b20a6f686b2c68f7a0bd6add753d697abf720d63f8db3ab7b1ad"
 
 [[package]]
 name = "os"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "bootloader",
  "kernel",
