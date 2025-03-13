@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-	outputs = { self, nixpkgs, ... }: {
+	outputs = { nixpkgs, ... }: {
     devShells.x86_64-linux.default = let
       pkgs = import nixpkgs { system = "x86_64-linux"; };
 			overrides.toolchain.channel = "nightly";
@@ -25,6 +25,10 @@
 				rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
 				rustup target add x86_64-unknown-none
 				rustup component add llvm-tools-preview
+				echo -e "git: \n"
+				git log --oneline --graph --decorate --all
+				echo -e "\n"
+				git branch
 				'';
 			RUSTFLAGS = (builtins.map (a: ''-L ${a}/lib'') []);
 			LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [];

@@ -3,8 +3,6 @@ name = "os"
 version = "0.0.0"
 edition = "2024"
 
-#cargo-features = [ "artifact dependencies"]
-
 [workspace]
 members = [
 	"kernel/",
