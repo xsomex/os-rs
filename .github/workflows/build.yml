@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: env
+        run: export RUSTC_VERSION=nightly
       - name: installation
         run: curl https://sh.rustup.rs -sSf | sh -s -- -y
       - name: configuration
