@@ -1,40 +1,21 @@
-#![no_std]
+// low level implementation to control the ram
 
-/// TODO: define what exactly is relevant from the memory manager and what has to be managed by the
-/// task manager. Define the API.
+#![no_std]
 
 #[cfg(feature = "paging4_recursive")]
 mod level4_recursive;
 #[cfg(feature = "paging4_recursive")]
 pub use level4_recursive::*;
 
-/// `size` is the number of 4kB blocks. It may vary in the future.
-/// null_mut means an error
-///
-/// It's the module reponsability to free memory after use. Don't forget it!
-pub trait MemoryManager {
-    // for tasks that needs unspecific memory
-    fn needs(&mut self, size: usize, options: SafeMemoryOptions) -> *mut u8;
-    unsafe fn unsafe_needs(&mut self, size: usize, options: UnsafeMemoryOptions) -> *mut u8;
-
-    // for tasks that needs specific memory
-    fn map(&mut self, phys_addr: u64, size: usize, options: SafeMemoryOptions) -> *mut u8;
-    unsafe fn unsafe_map(&mut self, phys_addr: u64, size: usize, options: UnsafeMemoryOptions) -> *mut u8;
-
-    // mark the memory as free
-    fn free(&mut self, ptr: *mut u8, size: usize);
-
-
-    fn read_unsafe_options(&mut self, ptr: *mut u8) -> UnsafeMemoryOptions;
-    fn read_safe_options(&mut self, ptr: *mut u8) -> SafeMemoryOptions;
+pub trait RamManager {
+    fn find_free_virt(&mut self, size: usize) -> *mut u8; // ptr to virt mem
+    fn find_free_phys(&mut self, size: usize) -> u64; // phys address
+    unsafe fn map(&mut self, phys: u64, virt: *mut u8) -> *mut u8; // return virt. Options should
+                                                                   // left unchanged
+    unsafe fn set_options(&mut self, ptr: *mut u8, options: RamOptions);
+    fn read_options(&mut self, ptr: *mut u8) -> RamOptions;
 }
 
-/// These options are not supposed to cause security problems, bugs, or conduce to unsafe situations
-pub struct SafeMemoryOptions {
-    // TODO: add options...
-}
-
-/// These options can conduce to security problems, bugs, or unsafe situations
-pub struct UnsafeMemoryOptions {
+pub struct RamOptions {
     // TODO: add options...
 }
