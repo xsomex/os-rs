@@ -10,4 +10,4 @@ bootloader_api.workspace = true
 x86_64.workspace = true
 
 display_text.workspace = true
-memory.workspace = true
+ram.workspace = true

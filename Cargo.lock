@@ -331,7 +331,7 @@ dependencies = [
  "bootloader_api",
  "display_text",
  "lazy_static",
- "memory",
+ "ram",
  "spin",
  "x86_64",
 ]
@@ -420,16 +420,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
-name = "memory"
-version = "0.0.0"
-dependencies = [
- "bootloader_api",
- "lazy_static",
- "spin",
- "x86_64",
-]
-
-[[package]]
 name = "miniz_oxide"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -495,6 +485,16 @@ name = "radium"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
+
+[[package]]
+name = "ram"
+version = "0.0.0"
+dependencies = [
+ "bootloader_api",
+ "lazy_static",
+ "spin",
+ "x86_64",
+]
 
 [[package]]
 name = "redox_syscall"

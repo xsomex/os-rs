@@ -9,7 +9,7 @@ edition = "2024"
 members = [
 	"kernel/",
 	"modules/display_text/",
-	"modules/memory",
+	"modules/ram",
 ]
 
 [workspace.dependencies]
@@ -19,7 +19,7 @@ spin = "0.9.8"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"] }
 
 display_text = { path = "./modules/display_text/", features = ["processor_graphics"] }
-memory = { path = "./modules/memory/", features = ["paging4_recursive"] }
+ram = { path = "./modules/ram/", features = ["paging4_recursive"] }
 
 [build-dependencies]
 kernel = { path = "./kernel/", artifact = "bin", target = "x86_64-unknown-none" }
