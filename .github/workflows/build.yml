@@ -1,0 +1,19 @@
+name: OS builder
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: installation
+        run: curl https://sh.rustup.rs -sSf | sh -s -- -y
+      - name: configuration
+        run: rustup update && rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu && rustup target add x86_64-unknown-none && rustup component add llvm-tools-preview
+      - name: build
+        run: cargo build
