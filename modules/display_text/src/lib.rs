@@ -1,11 +1,13 @@
 #![no_std]
 
-/// processor graphics
+//---------------------------------------------------------------------------------
+// feature processor graphics
 #[cfg(feature = "processor_graphics")]
 mod processor_graphics;
 #[cfg(feature = "processor_graphics")]
 pub use processor_graphics::*;
 
+//---------------------------------------------------------------------------------
 // Common display_text interface. 
 // This code is included in all cases, and it should be the only part of the crate used when
 // display_text is needed. If a module wants to provide a display_text interface (a display modules
