@@ -1,5 +1,6 @@
 use bootloader_api::info::FrameBufferInfo;
 use font::*;
+use crate::DisplayText;
 
 mod font;
 mod init;
@@ -48,8 +49,7 @@ impl DisplayTextManager {
     pub fn print(&mut self, text: &str) {
         for c in text.chars() {
             if c == '\n' {
-                self.cursor.1 += 1;
-                self.cursor.0 = 0;
+                self.new_line();
             } else {
                 self.write_char_uncheck(
                     c,
@@ -57,15 +57,18 @@ impl DisplayTextManager {
                     self.foreground_color,
                     self.background_color,
                 );
-                self.cursor.0 += 1;
+                match self.move_right(1) {
+                    Err(_) => self.new_line(),
+                    _ => (),
+                }
             }
-            if self.frame_info.width - self.cursor.0 * TOTAL_WIDTH < TOTAL_WIDTH {
-                self.cursor.0 = 0;
-                self.cursor.1 += 1;
-            }
-            if self.frame_info.height - self.cursor.1 * TOTAL_EIGHT < TOTAL_EIGHT {
-                self.cursor.1 = 0;
-            }
+        }
+    }
+
+    fn new_line(&mut self) {
+        match self.goto(0, self.cursor.1 + 1) {
+            Err(_) => self.goto(0, 0).unwrap(),
+            _ => ()
         }
     }
 

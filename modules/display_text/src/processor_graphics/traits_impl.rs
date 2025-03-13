@@ -1,6 +1,8 @@
 use crate::{DisplayTextManager, DisplayText, IndexOutOfRange};
 use core::fmt;
 
+use super::font::{TOTAL_EIGHT, TOTAL_WIDTH};
+
 unsafe impl Sync for DisplayTextManager {}
 unsafe impl Send for DisplayTextManager {}
 
@@ -22,7 +24,7 @@ impl DisplayText for DisplayTextManager {
         self.fill(color);
     }
     fn goto(&mut self, x: usize, y: usize) -> Result<(), IndexOutOfRange> {
-        if x <= self.frame_info.width && y <= self.frame_info.height {
+        if x < self.frame_info.width/TOTAL_WIDTH && y < self.frame_info.height/TOTAL_EIGHT {
             self.cursor = (x, y);
             return Ok(());
         }
