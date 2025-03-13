@@ -10,4 +10,5 @@ bootloader_api.workspace = true
 x86_64.workspace = true
 
 [features]
-paging4_recursive = []
+virt_paging = []
+phys_whole_map = []
