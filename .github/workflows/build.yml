@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: installation
-        run: curl https://sh.rustup.rs -sSf | sh -s -- -y
+        run: mkdir bootable && curl https://sh.rustup.rs -sSf | sh -s -- -y
       - name: configuration
         run: rustup update && rustup default nightly && rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu && rustup target add x86_64-unknown-none && rustup component add llvm-tools-preview
       - name: build
