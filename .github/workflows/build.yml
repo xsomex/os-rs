@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: env
-        run: export RUSTC_VERSION=nightly
       - name: installation
         run: curl https://sh.rustup.rs -sSf | sh -s -- -y
       - name: configuration
-        run: rustup update && rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu && rustup target add x86_64-unknown-none && rustup component add llvm-tools-preview
+        run: rustup update && rustup default nightly && rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu && rustup target add x86_64-unknown-none && rustup component add llvm-tools-preview
       - name: build
         run: cargo build
