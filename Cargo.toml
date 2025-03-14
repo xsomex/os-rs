@@ -7,6 +7,7 @@ edition = "2024"
 members = [
 	"kernel/", "libs/modules_common",
 	"modules/display_text/",
+	"modules/ram",
 ]
 
 [workspace.dependencies]
@@ -16,6 +17,7 @@ lazy_static = {version = "1.5.0", features = ["spin_no_std"] }
 
 display_text = { path = "./modules/display_text/", features = ["processor_graphics"] }
 modules_common = { path = "./libs/modules_common/" }
+ram = { path = "./modules/ram/", features = ["virt_paging", "phys_whole_map"] }
 
 [build-dependencies]
 kernel = { path = "./kernel/", artifact = "bin", target = "x86_64-unknown-none" }

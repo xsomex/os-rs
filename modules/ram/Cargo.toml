@@ -1,13 +1,13 @@
 [package]
-name = "kernel"
-version = "0.0.1"
+name = "ram"
+version = "0.0.0"
 edition = "2024"
 
 [dependencies]
 spin.workspace = true
 lazy_static.workspace = true
 bootloader_api.workspace = true
-modules_common.workspace = true
 
-display_text.workspace = true
-ram.workspace = true
+[features]
+virt_paging = []
+phys_whole_map = []
