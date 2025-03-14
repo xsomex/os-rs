@@ -1,13 +1,12 @@
 #[cfg(feature = "virt_paging")]
 mod paging;
-use core::ptr::null_mut;
-
 #[cfg(feature = "virt_paging")]
 pub use paging::*;
 
 //-------------------------------------------------------------
 
 use super::phys::PhysAddr;
+use core::ptr::null_mut;
 
 /// Represents a virtual address. Does not provide any functions, only usefull to make the
 /// difference between physical and virtual addresses in function args or returns.
@@ -20,7 +19,7 @@ pub struct VirtAddr(u64);
 /// that if a module uses a feature specific option, it will not work with a different variant of
 /// the crate. You should'nt do that.
 #[derive(Debug, Clone, Copy)]
-pub enum VirtMemOptions {
+pub enum VirtMemOption {
     /// bit index
     /// Note that implementation must warranty that the bit will not overwrite the address or an
     /// other option.
@@ -47,23 +46,27 @@ pub enum VirtMemError {
 }
 
 pub trait VirtMemManager {
-    /// Can use `PhysMemManager::find_free` and `VirtMemManager::map`
+    /// Can NOT use `PhysMemManager::find_free` and `VirtMemManager::map`
     fn find_free(&mut self, size: usize) -> PhysAddr;
 
     /// When mapping, all options should be reset to the same default state.
+    /// Can use `PhysMemManager::find_free`
     fn map(&mut self, virt_addr: VirtAddr, phys_addr: PhysAddr) -> *mut u8;
 
-    fn set_option(&mut self, virt_addr: VirtAddr, opt: VirtMemOptions) -> *mut u8;
-    fn unset_option(&mut self, virt_addr: VirtAddr, opt: VirtMemOptions) -> *mut u8;
+    /// Can NOT use `PhysMemManager`
+    fn set_option(&mut self, virt_addr: VirtAddr, opt: VirtMemOption) -> *mut u8;
+    /// Can NOT use `PhysMemManager`
+    fn unset_option(&mut self, virt_addr: VirtAddr, opt: VirtMemOption) -> *mut u8;
+    /// Can NOT use `PhysMemManager`
     fn read_option(
         &mut self,
         virt_addr: VirtAddr,
-        opt: VirtMemOptions,
+        opt: VirtMemOption,
     ) -> Result<VirtMemError, bool>;
 
     fn set_options<T>(&mut self, virt_addr: VirtAddr, opts: T) -> *mut u8
     where
-        T: Iterator<Item = VirtMemOptions>,
+        T: Iterator<Item = VirtMemOption>,
     {
         let mut ptr = null_mut();
         for opt in opts {
@@ -74,7 +77,7 @@ pub trait VirtMemManager {
 
     fn unset_options<T>(&mut self, virt_addr: VirtAddr, opts: T) -> *mut u8
     where
-        T: Iterator<Item = VirtMemOptions>,
+        T: Iterator<Item = VirtMemOption>,
     {
         let mut ptr = null_mut();
         for opt in opts {
