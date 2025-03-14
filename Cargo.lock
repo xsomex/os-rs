@@ -185,6 +185,7 @@ version = "0.1.0"
 dependencies = [
  "bootloader_api",
  "lazy_static",
+ "modules_common",
  "spin",
 ]
 
@@ -324,6 +325,7 @@ dependencies = [
  "bootloader_api",
  "display_text",
  "lazy_static",
+ "modules_common",
  "spin",
 ]
 
@@ -417,6 +419,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e3e04debbb59698c15bacbb6d93584a8c0ca9cc3213cb423d31f760d8843ce5"
 dependencies = [
  "adler2",
+]
+
+[[package]]
+name = "modules_common"
+version = "0.0.0"
+dependencies = [
+ "bootloader_api",
 ]
 
 [[package]]

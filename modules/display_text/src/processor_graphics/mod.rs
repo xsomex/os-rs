@@ -4,9 +4,9 @@ use crate::DisplayText;
 
 mod font;
 mod init;
-mod traits_impl;
+mod display_text;
 
-pub use init::{init, DISPLAY_TEXT};
+pub use init::DISPLAY_TEXT;
 
 #[derive(Debug, Clone, Copy)]
 pub struct DisplayTextManager {

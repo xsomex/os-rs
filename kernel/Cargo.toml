@@ -7,5 +7,6 @@ edition = "2024"
 spin.workspace = true
 lazy_static.workspace = true
 bootloader_api.workspace = true
+modules_common.workspace = true
 
 display_text.workspace = true
