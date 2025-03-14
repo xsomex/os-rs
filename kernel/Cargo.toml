@@ -10,4 +10,4 @@ bootloader_api.workspace = true
 modules_common.workspace = true
 
 display_text.workspace = true
-ram.workspace = true
+paging.workspace = true
