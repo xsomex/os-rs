@@ -8,4 +8,6 @@ spin.workspace = true
 lazy_static.workspace = true
 bootloader_api.workspace = true
 
+modules_common.workspace = true
+
 [features]
