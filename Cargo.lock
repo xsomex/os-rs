@@ -326,7 +326,6 @@ dependencies = [
  "display_text",
  "lazy_static",
  "modules_common",
- "ram",
  "spin",
 ]
 
@@ -486,16 +485,6 @@ name = "radium"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
-
-[[package]]
-name = "ram"
-version = "0.0.0"
-dependencies = [
- "bootloader_api",
- "lazy_static",
- "modules_common",
- "spin",
-]
 
 [[package]]
 name = "redox_syscall"
