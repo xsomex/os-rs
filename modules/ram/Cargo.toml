@@ -1,5 +1,5 @@
 [package]
-name = "paging"
+name = "ram"
 version = "0.0.0"
 edition = "2024"
 
@@ -9,4 +9,3 @@ lazy_static.workspace = true
 bootloader_api.workspace = true
 
 [features]
-whole_map = []
