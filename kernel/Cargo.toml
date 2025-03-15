@@ -10,3 +10,4 @@ bootloader_api.workspace = true
 modules_common.workspace = true
 
 display_text.workspace = true
+virt_memory.workspace = true

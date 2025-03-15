@@ -6,7 +6,7 @@ edition = "2024"
 [workspace]
 members = [
 	"kernel/", "libs/modules_common",
-	"modules/display_text/",
+	"modules/display_text/", "modules/virt_memory",
 ]
 
 [workspace.dependencies]
@@ -15,6 +15,7 @@ spin = "0.9.8"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"] }
 
 display_text = { path = "./modules/display_text/", features = ["processor_graphics"] }
+virt_memory = { path = "./modules/virt_memory/" }
 modules_common = { path = "./libs/modules_common/" }
 
 [build-dependencies]
