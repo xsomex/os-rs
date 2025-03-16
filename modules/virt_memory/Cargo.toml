@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 modules_common.workspace = true
+bootloader_api.workspace = true
 
 [features]
 paging = []
