@@ -15,7 +15,7 @@ spin = "0.9.8"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"] }
 
 display_text = { path = "./modules/display_text/", features = ["processor_graphics"] }
-virt_memory = { path = "./modules/virt_memory/" }
+virt_memory = { path = "./modules/virt_memory/", features = ["paging"] }
 modules_common = { path = "./libs/modules_common/" }
 
 [build-dependencies]
