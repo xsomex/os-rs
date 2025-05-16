@@ -31,6 +31,7 @@ fn main() {
         cmd.arg("-drive")
             .arg(format!("format=raw,file={bios_path}"));
     }
+    cmd.arg("-m").arg("4G");
 
     let mut child = cmd.spawn().unwrap();
     child.wait().unwrap();

@@ -20,7 +20,7 @@
           mkShell {
             buildInputs = [ 
 							(rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
-								extensions = [ "rust-src" ];
+								extensions = [ "rust-src" "llvm-tools" ];
 								targets = [ "x86_64-unknown-none" ];
 							}))
 							qemu

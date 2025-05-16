@@ -5,7 +5,7 @@
 use bootloader_api::info::FrameBuffer;
 
 use super::{
-    font::{monospace::MONOSPACE, Font, FontsList}, DisplayManager
+    font::{monospace::MONOSPACE, FontsList}, DisplayManager
 };
 
 pub struct DisplayTextManager<'a> {
@@ -42,5 +42,14 @@ impl<'a> DisplayTextManager<'a> {
                 self.cursor = (self.cursor.0 + 1, self.cursor.1);
             }
         }
+    }
+}
+
+use core::fmt;
+
+impl<'a> fmt::Write for DisplayTextManager<'a> {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write(s);
+        Ok(())
     }
 }

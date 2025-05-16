@@ -4,7 +4,7 @@ pub mod font;
 
 use bootloader_api::info::{FrameBuffer, PixelFormat};
 use color::Color;
-use font::{monospace::MONOSPACE, Char};
+use font::Char;
 
 #[derive(Debug)]
 pub struct DisplayManager<'a> {

@@ -29,7 +29,7 @@ impl Font {
         if let Some(i) = index {
             Some(self.bytes[i])
         } else {
-            None
+            Some(self.bytes[0])
         }
     }
 }
