@@ -17,6 +17,7 @@ impl UnusedRegion {
     pub fn at_address(address: usize) -> Self {
         let mut size = 0;
         let mut next_unused_region = 0;
+
         for i in 0..WORD_SIZE {
             size |= unsafe {
                 (((address + i) as *mut u8).read() as usize) << (((WORD_SIZE - i) * 8) % WORD_SIZE)
@@ -54,10 +55,10 @@ impl UnusedRegion {
     }
 
     pub fn set_next_unused_region(&mut self, new_next_unused_region: usize) -> &mut UnusedRegion {
-        for i in WORD_SIZE..2 * WORD_SIZE {
+        for i in 0..WORD_SIZE {
             unsafe {
-                *((self.address + i) as *mut u8) =
-                    (new_next_unused_region >> (((2 * WORD_SIZE - i) * 8) % WORD_SIZE)) as u8;
+                *((self.address + i + WORD_SIZE) as *mut u8) =
+                    (new_next_unused_region >> (((WORD_SIZE - i) * 8) % WORD_SIZE)) as u8;
             }
         }
         self.next_unused_region = if new_next_unused_region == 0 {
@@ -142,10 +143,7 @@ unsafe impl GlobalAlloc for GlobalAllocator {
                         }
                     } else {
                         current_unused_region
-                            .set_size(
-                                current_unused_region.address() + current_unused_region.size()
-                                    - ptr,
-                            )
+                            .set_size(ptr - current_unused_region.address())
                             .set_next_unused_region(ptr + layout.size());
                     }
 
@@ -204,8 +202,10 @@ unsafe impl GlobalAlloc for GlobalAllocator {
                                 );
                             unsafe { *(self.heap_start as *mut usize) = ptr };
                         }
+                        _ => ()
                     }
-                } else {
+                } 
+                else {
                     match current_unused_region.previous_unused_region {
                         Some(prev) => {
                             let mut prev = UnusedRegion::at_address(prev);

@@ -33,8 +33,8 @@ fn start(boot_info: &mut BootInfo) -> ! {
     let b = Box::new("hello");
     writeln!(display_text, "Hello world! {}", *b).unwrap();
     drop(b);
-    // let b = Box::new("hello");
-    // writeln!(display_text, "Hello world! {}", *b).unwrap();
+    let b = Box::new("hello");
+    writeln!(display_text, "Hello world! {}", *b).unwrap();
     loop {}
 }
 
