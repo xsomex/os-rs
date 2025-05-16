@@ -9,7 +9,7 @@ use font::Char;
 #[derive(Debug)]
 pub struct DisplayManager<'a> {
     buffer: &'a mut [u8],
-    buffer_byte_len: usize,
+    _buffer_byte_len: usize,
     screen_size: (usize, usize), // in px
     buffer_size: (usize, usize), // in px
     bytes_per_px: usize,
@@ -29,7 +29,7 @@ impl<'a> DisplayManager<'a> {
 
         DisplayManager {
             buffer,
-            buffer_byte_len,
+            _buffer_byte_len: buffer_byte_len,
             screen_size,
             buffer_size,
             bytes_per_px,

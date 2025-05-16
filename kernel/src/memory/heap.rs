@@ -84,6 +84,6 @@ pub fn init_heap(
         
         writeln!(display_text, "Heap allocated at {}. Size: 2MiB", heap_ptr).unwrap();
         
-        super::global_allocator::init_glob_alloc(heap_ptr, heap_ptr + 2_097_152);
+        super::global_allocator::init_glob_alloc(heap_ptr as usize, (heap_ptr + 2_097_152) as usize);
     }
 }

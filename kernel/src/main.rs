@@ -28,33 +28,13 @@ fn start(boot_info: &mut BootInfo) -> ! {
         boot_info.physical_memory_offset.into_option().unwrap(),
         &mut display_text,
     );
+    writeln!(display_text, "Hello world!").unwrap();
 
-    // drop(vec) fails if there is vec.push(). If vec.push() is not called, drop(vec) works
-    // perfectly
-
-    let mut vec = Vec::with_capacity(4);
-    vec.push(0u8);
-    vec.push(0);
-    vec.push(0);
-    vec.push(0);
-    vec.push(0);
-
-    for i in &vec {
-        write!(display_text, "{}", i);
-    }
-    drop(vec);
-
-    let mut new_vec = alloc::vec![(), (), ()];
-    new_vec.push(());
-    for i in &new_vec {
-        writeln!(display_text, "{:?}", i);
-    }
-    drop(new_vec);
-    
     let b = Box::new("hello");
-    writeln!(display_text, "{}", *b);
+    writeln!(display_text, "Hello world! {}", *b).unwrap();
     drop(b);
-
+    // let b = Box::new("hello");
+    // writeln!(display_text, "Hello world! {}", *b).unwrap();
     loop {}
 }
 

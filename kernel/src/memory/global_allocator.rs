@@ -1,152 +1,244 @@
-use core::{alloc::{GlobalAlloc, Layout}, cmp::max};
+use core::{
+    alloc::{GlobalAlloc, Layout},
+    cmp::max,
+    usize,
+};
+pub const WORD_SIZE: usize = size_of::<usize>();
 
-pub struct GlobalAllocator {
-    heap_start: u64,
-    heap_end: u64,
+#[derive(Debug, Clone, Copy)]
+pub struct UnusedRegion {
+    address: usize,
+    size: usize,
+    next_unused_region: Option<usize>,
+    previous_unused_region: Option<usize>,
 }
 
-// TODO:
-// Find WHY TH F**K THERE IS BUG WHEN DEALLOCATING VEC WITH NEW SIZE
-//
-// When Vec is reallocated, then deallocate Vec fails
-// Is it a problem of allocate, deallocate or reallocate?
-// TODO: Find a way to debug this F**KING CODE!
-//
-// Probably deallocate -> whithout drop(), everything works
-unsafe impl GlobalAlloc for GlobalAllocator {
-    unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
-        let size = max(layout.size() as u64, 16);
-        let align = max(layout.align() as u64, 16);
+impl UnusedRegion {
+    pub fn at_address(address: usize) -> Self {
+        let mut size = 0;
+        let mut next_unused_region = 0;
+        for i in 0..WORD_SIZE {
+            size |= unsafe {
+                (((address + i) as *mut u8).read() as usize) << (((WORD_SIZE - i) * 8) % WORD_SIZE)
+            };
+            next_unused_region |= unsafe {
+                (((address + WORD_SIZE + i) as *mut u8).read() as usize)
+                    << (((WORD_SIZE - i) * 8) % WORD_SIZE)
+            };
+        }
 
-        let first_unused = unsafe { (self.heap_start as *mut u64).read() };
-        let mut current_unused_address = first_unused;
-        let mut precedent_unused_address = 0;
+        let next_unused_region = if next_unused_region == 0 {
+            None
+        } else {
+            Some(next_unused_region)
+        };
 
-        loop {
-            if current_unused_address == 0 {
-                panic!()
-            }
-
-            let unused_info = unsafe { (current_unused_address as *mut u128).read() };
-            let unused_size = (unused_info >> 64) as u64;
-
-            let mut skip_for_align = align - current_unused_address % align;
-            if skip_for_align != 0 && skip_for_align < 16 {
-                skip_for_align = 16 + align - ((current_unused_address + 16) % align);
-            }
-            if unused_size - skip_for_align - 16 >= size {
-                let ptr = (current_unused_address + skip_for_align) as *mut u8;
-                unsafe {
-                    *(current_unused_address as *mut u128) =
-                        ((current_unused_address + skip_for_align + size) as u128) | ((skip_for_align as u128) << 64);
-                    *((current_unused_address + skip_for_align + size) as *mut u128) = (unused_info
-                        & 0xFFFF_FFFF_FFFF_FFFF)
-                        | (((unused_size - skip_for_align - size) as u128) << 64);
-                }
-                if skip_for_align == 0 && current_unused_address == first_unused {
-                    unsafe {
-                        *(self.heap_start as *mut u64) = current_unused_address + skip_for_align + size
-                    };
-                } else if skip_for_align == 0 {
-                    unsafe {
-                        *(precedent_unused_address as *mut u128) &= !0xFFFF_FFFF_FFFF_FFFF;
-                        *(precedent_unused_address as *mut u128) |= (current_unused_address + skip_for_align + size) as u128;
-                    }
-                }
-                return ptr;
-            }
-
-            precedent_unused_address = current_unused_address;
-            current_unused_address = (unused_info & 0xFFFF_FFFF_FFFF_FFFF) as u64;
+        UnusedRegion {
+            address,
+            size,
+            next_unused_region,
+            previous_unused_region: None,
         }
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: core::alloc::Layout) {
-        let first_unused = unsafe { (self.heap_start as *mut u64).read() };
-        let mut current_unused_address = first_unused;
-        let ptr = ptr as u64;
-
-        if ptr < first_unused {
-            let unused = unsafe { (current_unused_address as *mut u128).read() };
-            let unused_size = (unused >> 64) as u64;
-            let next_unused = (unused & 0xFFFF_FFFF_FFFF_FFFF) as u64;
-
-            if ptr + max(16, layout.size() as u64) == first_unused {
-                unsafe {
-                    *(ptr as *mut u128) = (((unused_size + max(16, layout.size() as u64)) as u128)
-                        << 64)
-                        | (next_unused as u128);
-                }
-            } else {
-                unsafe {
-                    *(ptr as *mut u128) =
-                        (((max(16, layout.size() as u64)) as u128) << 64) | (first_unused as u128)
-                };
+    pub fn set_size(&mut self, new_size: usize) -> &mut UnusedRegion {
+        for i in 0..WORD_SIZE {
+            unsafe {
+                *((self.address + i) as *mut u8) =
+                    (new_size >> (((WORD_SIZE - i) * 8) % WORD_SIZE)) as u8;
             }
-            unsafe { *(self.heap_start as *mut u64) = ptr };
         }
+        self.size = new_size;
+
+        self
+    }
+
+    pub fn set_next_unused_region(&mut self, new_next_unused_region: usize) -> &mut UnusedRegion {
+        for i in WORD_SIZE..2 * WORD_SIZE {
+            unsafe {
+                *((self.address + i) as *mut u8) =
+                    (new_next_unused_region >> (((2 * WORD_SIZE - i) * 8) % WORD_SIZE)) as u8;
+            }
+        }
+        self.next_unused_region = if new_next_unused_region == 0 {
+            None
+        } else {
+            Some(new_next_unused_region)
+        };
+
+        self
+    }
+
+    pub fn next(&self) -> Result<UnusedRegion, ()> {
+        match self.next_unused_region {
+            Some(ptr) => Ok({
+                let mut r = UnusedRegion::at_address(ptr);
+                r.previous_unused_region = Some(self.address);
+                r
+            }),
+            _ => Err(()),
+        }
+    }
+
+    pub fn holds(&self, layout: Layout) -> Option<usize> {
+        let mut skip = layout.align() - (self.address % layout.align());
+        if skip != 0 && skip < 2 * WORD_SIZE {
+            skip =
+                2 * WORD_SIZE + layout.align() - ((self.address + 2 * WORD_SIZE) % layout.align());
+        }
+        if self.size - skip - 2 * WORD_SIZE >= layout.size() {
+            Some(self.address + skip)
+        } else {
+            None
+        }
+    }
+
+    pub const fn size(&self) -> usize {
+        self.size
+    }
+    pub const fn address(&self) -> usize {
+        self.address
+    }
+    pub const fn next_unused_region(&self) -> Option<usize> {
+        self.next_unused_region
+    }
+}
+
+pub struct GlobalAllocator {
+    pub heap_start: usize,
+    pub heap_end: usize,
+}
+
+unsafe impl GlobalAlloc for GlobalAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        let mut current_unused_region =
+            UnusedRegion::at_address(unsafe { (self.heap_start as *mut usize).read() });
+        let layout =
+            Layout::from_size_align(max(2 * WORD_SIZE, layout.size()), layout.align()).unwrap();
 
         loop {
-            if current_unused_address == 0 {
-                break;
-            }
-            let unused = unsafe { (current_unused_address as *mut u128).read() };
-            let unused_size = (unused >> 64) as u64;
-            let next_unused = (unused & 0xFFFF_FFFF_FFFF_FFFF) as u64;
+            match current_unused_region.holds(layout) {
+                Some(ptr) => {
+                    UnusedRegion::at_address(ptr + layout.size())
+                        .set_size(
+                            current_unused_region.address() + current_unused_region.size()
+                                - ptr
+                                - layout.size(),
+                        )
+                        .set_next_unused_region(match current_unused_region.next_unused_region() {
+                            Some(v) => v,
+                            _ => 0,
+                        });
 
-            if ptr > current_unused_address && ptr <= next_unused {
-                if ptr == current_unused_address + unused_size {
-                    if ptr + max(16, layout.size() as u64) == next_unused {
-                        unsafe {
-                            let next_size = ((next_unused as *mut u128).read() >> 64) as u64;
-                            let after_next = ((next_unused as *mut u128).read()) as u64;
-                            *(current_unused_address as *mut u128) =
-                                ((unused_size + next_size + max(16, layout.size() as u64)) as u128)
-                                    | (after_next as u128);
+                    if ptr == current_unused_region.address() {
+                        match current_unused_region.previous_unused_region {
+                            Some(prev) => {
+                                UnusedRegion::at_address(prev)
+                                    .set_next_unused_region(ptr + layout.size());
+                            }
+                            None => unsafe {
+                                *(self.heap_start as *mut usize) = ptr + layout.size()
+                            },
                         }
                     } else {
-                        unsafe {
-                            *(current_unused_address as *mut u128) =
-                                (((unused_size + max(16, layout.size() as u64)) as u128) << 64)
-                                    | (next_unused as u128);
+                        current_unused_region
+                            .set_size(
+                                current_unused_region.address() + current_unused_region.size()
+                                    - ptr,
+                            )
+                            .set_next_unused_region(ptr + layout.size());
+                    }
+
+                    return ptr as *mut u8;
+                }
+                None => {
+                    current_unused_region = current_unused_region.next().unwrap();
+                }
+            }
+        }
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        let ptr = ptr as usize;
+        let layout =
+            Layout::from_size_align(max(2 * WORD_SIZE, layout.size()), layout.align()).unwrap();
+        let mut current_unused_region =
+            UnusedRegion::at_address(unsafe { (self.heap_start as *mut usize).read() });
+
+        loop {
+            if ptr < current_unused_region.address() {
+                if ptr + layout.size() == current_unused_region.address() {
+                    match current_unused_region.previous_unused_region {
+                        Some(prev) => {
+                            let mut prev = UnusedRegion::at_address(prev);
+                            if prev.address() + prev.size() == ptr {
+                                prev.set_size(
+                                    prev.size() + layout.size() + current_unused_region.size(),
+                                )
+                                .set_next_unused_region(
+                                    match current_unused_region.next_unused_region() {
+                                        Some(v) => v,
+                                        None => 0,
+                                    },
+                                );
+                            } else {                                
+                                UnusedRegion::at_address(ptr)
+                                    .set_size(current_unused_region.size() + layout.size())
+                                    .set_next_unused_region(
+                                        match current_unused_region.next_unused_region() {
+                                            Some(v) => v,
+                                            None => 0,
+                                        },
+                                    );
+                                prev.set_next_unused_region(ptr);
+                            }
+                        }
+                        None => {
+                            UnusedRegion::at_address(ptr)
+                                .set_size(current_unused_region.size() + layout.size())
+                                .set_next_unused_region(
+                                    match current_unused_region.next_unused_region() {
+                                        Some(v) => v,
+                                        None => 0,
+                                    },
+                                );
+                            unsafe { *(self.heap_start as *mut usize) = ptr };
                         }
                     }
                 } else {
-                    if ptr + max(16, layout.size() as u64) == next_unused {
-                        unsafe {
-                            let next_size = ((next_unused as *mut u128).read() >> 64) as u64;
-                            let after_next = ((next_unused as *mut u128).read()) as u64;
-                            *(ptr as *mut u128) = ((next_size + max(16, layout.size() as u64))
-                                as u128)
-                                | (after_next as u128);
+                    match current_unused_region.previous_unused_region {
+                        Some(prev) => {
+                            let mut prev = UnusedRegion::at_address(prev);
+                            if prev.address() + prev.size() == ptr {
+                                prev.set_size(
+                                    prev.size() + layout.size(),
+                                )
+                                .set_next_unused_region(current_unused_region.address());
+                            } else {                                
+                                UnusedRegion::at_address(ptr)
+                                    .set_size(layout.size())
+                                    .set_next_unused_region(current_unused_region.address());
+                                prev.set_next_unused_region(ptr);
+                            }
                         }
-                    } else {
-                        unsafe {
-                            *(ptr as *mut u128) = (((max(16, layout.size() as u64)) as u128) << 64)
-                                | (next_unused as u128)
-                        };
+                        None => {
+                            UnusedRegion::at_address(ptr)
+                                .set_size(layout.size())
+                                .set_next_unused_region(current_unused_region.address());
+                            unsafe { *(self.heap_start as *mut usize) = ptr };
+                        }
                     }
-                    unsafe {
-                        *(current_unused_address as *mut u128) =
-                            ((unused_size as u128) << 64) | (ptr as u128)
-                    };
                 }
+
+                return;
             }
 
-            current_unused_address = (unused & 0xFFFF_FFFF_FFFF_FFFF) as u64;
+            current_unused_region = current_unused_region.next().unwrap();
         }
     }
 
-    unsafe fn realloc(&self, ptr: *mut u8, layout: core::alloc::Layout, new_size: usize) -> *mut u8 {
-        unsafe {
-            let ptr = ptr as u64;
-            let new_ptr = self.alloc(Layout::from_size_align(new_size, layout.align()).unwrap()) as u64;
-            for i in 0..(layout.size()as u64) {
-                *((new_ptr + i) as *mut u8) = ((ptr + i) as *mut u8).read();
-            }
-            self.dealloc(ptr as *mut u8, layout);
-            new_ptr as *mut u8
-        }
+    unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+        0 as *mut u8
     }
 }
 
@@ -156,11 +248,13 @@ pub static mut GLOBAL_ALLOCATOR: GlobalAllocator = GlobalAllocator {
     heap_end: 0,
 };
 
-pub fn init_glob_alloc(heap_start: u64, heap_end: u64) {
+pub fn init_glob_alloc(heap_start: usize, heap_end: usize) {
     unsafe {
         GLOBAL_ALLOCATOR.heap_start = heap_start;
         GLOBAL_ALLOCATOR.heap_end = heap_end;
-        *((heap_start + 16) as *mut u128) = ((heap_end - heap_start) as u128) << 64;
-        *(heap_start as *mut u64) = heap_start + 16;
+        UnusedRegion::at_address(heap_start + WORD_SIZE)
+            .set_size(heap_end - heap_start - WORD_SIZE)
+            .set_next_unused_region(0);
+        *(heap_start as *mut usize) = heap_start + WORD_SIZE;
     }
 }
