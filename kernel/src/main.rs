@@ -3,11 +3,11 @@
 
 extern crate alloc;
 
+use alloc::{string::String, sync::Arc};
 use bootloader_api::{BootInfo, BootloaderConfig, config::Mapping, entry_point, info::Optional};
-use core::fmt::Write;
 use kernel::{
     display::text::DisplayTextManager,
-    interfaces::InterfacesManager,
+    interfaces::{AddInterface, CallInterface, InterfacesManager},
     memory::heap::init_heap,
 };
 
@@ -21,18 +21,19 @@ const CONFIG: BootloaderConfig = {
 pub struct Main;
 
 fn start(boot_info: &mut BootInfo) -> ! {
-    let mut display_text = match &mut boot_info.framebuffer {
-        Optional::Some(frame_buffer) => DisplayTextManager::new(frame_buffer),
-        _ => panic!(),
-    };
-
     init_heap(
         &boot_info.memory_regions,
         boot_info.physical_memory_offset.into_option().unwrap(),
     );
-
-    writeln!(display_text, "Hello world!");
+    
     let manager = InterfacesManager::new();
+    
+    let mut display_text = match &mut boot_info.framebuffer {
+        Optional::Some(frame_buffer) => manager.add_interface(Arc::new(DisplayTextManager::new(frame_buffer).wrap())),
+        _ => panic!(),
+    };
+
+    manager.call(&mut display_text, String::from("And... it WORKS!\n"));
 
     loop {}
 }

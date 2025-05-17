@@ -2,7 +2,10 @@
 //! DO NOT USE !!
 //! DEBUG PURPOSES ONLY !!!!!
 
+use alloc::string::String;
 use bootloader_api::info::FrameBuffer;
+
+use crate::interfaces::{CallableObject, InterfaceInputOutput};
 
 use super::{
     DisplayManager,
@@ -44,13 +47,37 @@ impl<'a> DisplayTextManager {
             }
         }
     }
+
+    pub fn wrap(self) -> DisplayTextWrapper {
+        DisplayTextWrapper(RefCell::new(self))
+    }
 }
 
-use core::fmt;
+use core::{cell::RefCell, fmt};
 
 impl fmt::Write for DisplayTextManager {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write(s);
         Ok(())
+    }
+}
+
+pub struct DisplayTextWrapper(RefCell<DisplayTextManager>);
+
+impl DisplayTextWrapper {
+    pub fn write(&self, txt: String) {
+        self.0.borrow_mut().write(&txt);
+    }
+}
+
+pub struct WriteStr;
+impl InterfaceInputOutput for WriteStr {
+    type Input = String;
+    type Output = ();
+}
+
+impl CallableObject<WriteStr> for DisplayTextWrapper {
+    fn call(&self, inputs: <WriteStr as InterfaceInputOutput>::Input) -> <WriteStr as InterfaceInputOutput>::Output {
+        self.write(inputs);
     }
 }
