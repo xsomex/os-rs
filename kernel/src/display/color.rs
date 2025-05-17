@@ -1,5 +1,5 @@
-use bootloader_api::info::PixelFormat;
 use crate::memory::vec::HeaplessVec as Vec;
+use bootloader_api::info::PixelFormat;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
@@ -17,7 +17,7 @@ impl Color {
         Color { r, g, b, a: 0xFF }
     }
     pub fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
-        Color { r, g, b, a}
+        Color { r, g, b, a }
     }
     pub fn from_bgra(b: u8, g: u8, r: u8, a: u8) -> Color {
         Color { r, g, b, a }
@@ -47,7 +47,7 @@ impl Color {
                 // for _ in 3..bytes_per_px {
                 //     output.push(0xFF)
                 // }
-            },
+            }
             PixelFormat::Bgr => {
                 output.push(self.b);
                 output.push(self.g);
@@ -55,15 +55,15 @@ impl Color {
                 // for _ in 3..bytes_per_px {
                 //     output.push(0xFF)
                 // }
-            },
+            }
             PixelFormat::U8 => {
                 // Why not
                 output.push(self.r ^ self.g ^ self.b);
                 // for _ in 1..bytes_per_px {
                 //     output.push(0xFF)
                 // }
-            },
-            _ => ()
+            }
+            _ => (),
         }
 
         output

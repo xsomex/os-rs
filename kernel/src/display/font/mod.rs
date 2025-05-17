@@ -1,7 +1,7 @@
 pub mod monospace;
 
-use core::{char, isize};
 use crate::memory::vec::HeaplessVec as Vec;
+use core::{char, isize};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Char<const W: usize, const H: usize> {
@@ -60,10 +60,10 @@ macro_rules! b_vec {
 macro_rules! add_char {
     ( $font: expr, $char: expr, $size: expr, $position: expr, $bytes: expr ) => {
         $font.chars.push($char);
-        $font.bytes.push( Char {
+        $font.bytes.push(Char {
             size: $size,
             position: $position,
-            bytes: $bytes
+            bytes: $bytes,
         });
     };
 }

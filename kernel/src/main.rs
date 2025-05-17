@@ -3,10 +3,14 @@
 
 extern crate alloc;
 
-use alloc::{boxed::Box, sync::Arc};
-use bootloader_api::{config::Mapping, entry_point, info::Optional, BootInfo, BootloaderConfig};
-use kernel::{display::{self, text::DisplayTextManager}, interfaces::{CallInterface, InterfacesManager, Test}, memory::heap::init_heap};
+use alloc::sync::Arc;
+use bootloader_api::{BootInfo, BootloaderConfig, config::Mapping, entry_point, info::Optional};
 use core::fmt::Write;
+use kernel::{
+    display::text::DisplayTextManager,
+    interfaces::{AddInterface, CallInterface, InterfacesManager, Test},
+    memory::heap::init_heap,
+};
 
 const CONFIG: BootloaderConfig = {
     let mut c = BootloaderConfig::new_default();
@@ -31,7 +35,7 @@ fn start(boot_info: &mut BootInfo) -> ! {
     writeln!(display_text, "Hello world!");
     let manager = InterfacesManager::new();
     let handle = manager.add_interface(Arc::new(Test));
-    
+
     writeln!(display_text, "{:?}", handle.call(3));
     writeln!(display_text, "{:?}", manager.call(&handle, 3));
 
@@ -46,4 +50,3 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
     unsafe { *(0x0 as *mut u8) = 0 };
     loop {}
 }
-

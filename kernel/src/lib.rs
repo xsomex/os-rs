@@ -3,6 +3,7 @@
 
 extern crate alloc;
 
-pub mod memory;
 pub mod display;
 pub mod interfaces;
+pub mod memory;
+

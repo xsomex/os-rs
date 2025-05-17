@@ -1,6 +1,6 @@
 pub mod color;
-pub mod text;
 pub mod font;
+pub mod text;
 
 use bootloader_api::info::{FrameBuffer, PixelFormat};
 use color::Color;

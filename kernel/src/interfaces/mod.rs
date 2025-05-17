@@ -21,9 +21,14 @@ impl InterfacesManager {
         *slf.weak_self.borrow_mut() = Arc::downgrade(&slf);
         slf
     }
+}
 
-    /// WARNING: To add a trait interface, use add_interface::<dyn MyTrait>(...)
-    pub fn add_interface<T: 'static>(&self, interface: Arc<T>) -> InterfaceHandle<T> {
+pub trait AddInterface<T> {
+    fn add_interface(&self, interface: Arc<T>) -> InterfaceHandle<T>;
+}
+
+impl<T: 'static> AddInterface<T> for InterfacesManager {
+    default fn add_interface(&self, interface: Arc<T>) -> InterfaceHandle<T> {
         let type_id = TypeId::of::<T>();
         let mut btree = self.interfaces.borrow_mut();
 
@@ -123,8 +128,6 @@ impl<T: 'static + CallableObject<IO>, IO: InterfaceInputOutput> CallInterface<T,
     }
 }
 
-
-
 // ------------------------------------ DEMO TEST ---------------------------------------
 
 pub struct Test;
@@ -145,25 +148,9 @@ impl CallableObject<TestFN> for Test {
 impl CallInterface<Test, TestFN> for InterfacesManager {
     default fn call(
         &self,
-        interface: &InterfaceHandle<Test>,
-        inputs: <TestFN as InterfaceInputOutput>::Input,
+        _interface: &InterfaceHandle<Test>,
+        _inputs: <TestFN as InterfaceInputOutput>::Input,
     ) -> Result<<TestFN as InterfaceInputOutput>::Output, ()> {
-        let interfaces_manager = self;
-        let btree = interfaces_manager.interfaces.borrow();
-        if !btree.contains_key(&TypeId::of::<Test>()) {
-            return Err(());
-        }
-        let btree = btree.get(&TypeId::of::<Test>()).unwrap();
-        if !btree.0.contains_key(&interface.id) {
-            return Err(());
-        }
-        let obj = btree.0.get(&interface.id).unwrap();
-
-        match obj.downcast_ref::<Test>() {
-            None => Err(()),
-            Some(object) => Ok(object.call(inputs)),
-        };
-
-        return Ok(2)
+        return Ok(2);
     }
 }

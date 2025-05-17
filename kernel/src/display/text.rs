@@ -5,7 +5,8 @@
 use bootloader_api::info::FrameBuffer;
 
 use super::{
-    font::{monospace::MONOSPACE, FontsList}, DisplayManager
+    DisplayManager,
+    font::{FontsList, monospace::MONOSPACE},
 };
 
 pub struct DisplayTextManager<'a> {

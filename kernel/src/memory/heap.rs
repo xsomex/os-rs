@@ -1,13 +1,8 @@
 use core::{arch::asm, ops::Deref};
 
-use core::fmt::Write;
-
 use bootloader_api::info::{MemoryRegionKind, MemoryRegions};
 
-pub fn init_heap(
-    mem_regions: &MemoryRegions,
-    phys_mem_offet: u64,
-) {
+pub fn init_heap(mem_regions: &MemoryRegions, phys_mem_offet: u64) {
     let mut current = (0, 0);
     let mut biggest = (0, 0);
     for mem_region in mem_regions.deref() {
