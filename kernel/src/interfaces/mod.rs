@@ -69,7 +69,11 @@ pub trait CallableObject<IO: InterfaceInputOutput> {
 }
 
 pub trait CallInterface<T: 'static + CallableObject<IO>, IO: InterfaceInputOutput> {
-    fn call(&self, interface: &InterfaceHandle<T>, inputs: IO::Input) -> Result<IO::Output, ()> {
+    fn call(
+        &self,
+        interface: &mut InterfaceHandle<T>,
+        inputs: IO::Input,
+    ) -> Result<IO::Output, ()> {
         let interfaces_manager = interface.store.upgrade().unwrap();
         let btree = interfaces_manager.interfaces.borrow();
         if !btree.contains_key(&TypeId::of::<T>()) {
@@ -94,11 +98,19 @@ impl<T: 'static + CallableObject<IO>, IO: InterfaceInputOutput> CallInterface<T,
 }
 
 impl<T: 'static> InterfaceHandle<T> {
-    pub fn call<IO: InterfaceInputOutput>(&self, inputs: IO::Input) -> Result<IO::Output, ()>
+    pub fn call<IO: InterfaceInputOutput>(&mut self, inputs: IO::Input) -> Result<IO::Output, ()>
     where
         T: CallableObject<IO>,
     {
-        <InterfaceHandle<T> as CallInterface<T, IO>>::call(&self, &self, inputs)
+        <InterfaceHandle<T> as CallInterface<T, IO>>::call(
+            &InterfaceHandle {
+                id: 0,
+                store: Weak::new(),
+                _phantom: PhantomData,
+            },
+            self,
+            inputs,
+        )
     }
 }
 
@@ -107,7 +119,7 @@ impl<T: 'static + CallableObject<IO>, IO: InterfaceInputOutput> CallInterface<T,
 {
     default fn call(
         &self,
-        interface: &InterfaceHandle<T>,
+        interface: &mut InterfaceHandle<T>,
         inputs: IO::Input,
     ) -> Result<IO::Output, ()> {
         let interfaces_manager = self;
@@ -125,32 +137,5 @@ impl<T: 'static + CallableObject<IO>, IO: InterfaceInputOutput> CallInterface<T,
             None => Err(()),
             Some(object) => Ok(object.call(inputs)),
         }
-    }
-}
-
-// ------------------------------------ DEMO TEST ---------------------------------------
-
-pub struct Test;
-pub struct TestFN;
-impl InterfaceInputOutput for TestFN {
-    type Input = usize;
-    type Output = usize;
-}
-impl CallableObject<TestFN> for Test {
-    fn call(
-        &self,
-        inputs: <TestFN as InterfaceInputOutput>::Input,
-    ) -> <TestFN as InterfaceInputOutput>::Output {
-        inputs
-    }
-}
-
-impl CallInterface<Test, TestFN> for InterfacesManager {
-    default fn call(
-        &self,
-        _interface: &InterfaceHandle<Test>,
-        _inputs: <TestFN as InterfaceInputOutput>::Input,
-    ) -> Result<<TestFN as InterfaceInputOutput>::Output, ()> {
-        return Ok(2);
     }
 }

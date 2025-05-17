@@ -7,17 +7,17 @@ use color::Color;
 use font::Char;
 
 #[derive(Debug)]
-pub struct DisplayManager<'a> {
-    buffer: &'a mut [u8],
-    _buffer_byte_len: usize,
+pub struct DisplayManager {
+    buffer: usize,
+    buffer_byte_len: usize,
     screen_size: (usize, usize), // in px
     buffer_size: (usize, usize), // in px
     bytes_per_px: usize,
     px_format: PixelFormat,
 }
 
-impl<'a> DisplayManager<'a> {
-    pub fn init(frame_buffer: &'a mut FrameBuffer) -> Self {
+impl DisplayManager {
+    pub fn init(frame_buffer: &mut FrameBuffer) -> Self {
         let info = &frame_buffer.info();
         let screen_size = (info.width, info.height);
         let buffer_size = (info.stride, info.height);
@@ -25,11 +25,11 @@ impl<'a> DisplayManager<'a> {
         let bytes_per_px = info.bytes_per_pixel;
         let px_format = info.pixel_format;
 
-        let buffer = frame_buffer.buffer_mut();
+        let buffer = frame_buffer.buffer_mut().as_ptr() as usize;
 
         DisplayManager {
             buffer,
-            _buffer_byte_len: buffer_byte_len,
+            buffer_byte_len,
             screen_size,
             buffer_size,
             bytes_per_px,
@@ -37,7 +37,7 @@ impl<'a> DisplayManager<'a> {
         }
     }
 
-    pub fn set_pixel(&mut self, x: usize, y: usize, color: Color) -> Result<(), ()> {
+    pub fn set_pixel(&self, x: usize, y: usize, color: Color) -> Result<(), ()> {
         if x > self.screen_size.0 || y > self.screen_size.1 {
             return Err(());
         }
@@ -46,13 +46,14 @@ impl<'a> DisplayManager<'a> {
         let start_index = y * self.buffer_size.0 * self.bytes_per_px + x * self.bytes_per_px;
 
         for (i, byte) in to_write.into_iter().enumerate() {
-            self.buffer[start_index + i] = byte
+            let buf = unsafe { core::slice::from_raw_parts_mut(self.buffer as *mut u8, self.buffer_byte_len) };
+            buf[start_index + i] = byte
         }
 
         Ok(())
     }
 
-    pub fn write_char(&mut self, x: usize, y: usize, c: Char<32, 32>) {
+    pub fn write_char(&self, x: usize, y: usize, c: Char<32, 32>) {
         let start = (x, y);
         for (y, line) in c.bytes().into_iter().enumerate() {
             for (x, byte) in line.into_iter().enumerate() {
