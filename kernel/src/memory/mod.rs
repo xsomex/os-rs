@@ -1,3 +1,3 @@
-pub mod vec;
-pub mod heap;
 pub mod global_allocator;
+pub mod heap;
+pub mod vec;

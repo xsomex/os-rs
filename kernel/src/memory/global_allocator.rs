@@ -217,9 +217,11 @@ unsafe impl GlobalAlloc for GlobalAllocator {
     }
 
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-        let new_ptr = unsafe { self.alloc(Layout::from_size_align_unchecked(new_size, layout.align())) } as usize;
+        let new_ptr =
+            unsafe { self.alloc(Layout::from_size_align_unchecked(new_size, layout.align())) }
+                as usize;
         let ptr = ptr as usize;
-        
+
         for i in 0..layout.size() {
             unsafe {
                 *((new_ptr + i) as *mut u8) = ((ptr + i) as *mut u8).read();
