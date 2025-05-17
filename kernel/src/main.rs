@@ -1,10 +1,24 @@
 #![no_std]
 #![no_main]
 
-use alloc::{boxed::Box, vec::{self, Vec}};
+// TODO:
+// 1. Check Unused struct
+// 2. Check GlobalAllocator::alloc()
+// 3. Chack GlobalAllocator::dealloc()
+// --
+// The bug is probably in Unused or in alloc(), because even without drop(), if two Box are
+// allocated, the second one panics.
+
+use alloc::{
+    alloc::alloc, boxed::Box, vec::{self, Vec}
+};
 use bootloader_api::{BootInfo, BootloaderConfig, config::Mapping, entry_point, info::Optional};
+use core::alloc::{GlobalAlloc, Layout};
 use core::fmt::Write;
-use kernel::{display::text::DisplayTextManager, memory::heap::init_heap};
+use kernel::{
+    display::text::DisplayTextManager,
+    memory::{global_allocator::GLOBAL_ALLOCATOR, heap::init_heap},
+};
 extern crate alloc;
 
 const CONFIG: BootloaderConfig = {
@@ -14,6 +28,27 @@ const CONFIG: BootloaderConfig = {
     c
 };
 
+macro_rules! debug_alloc {
+    ($display_text: expr) => {
+        let mut current_unused = GLOBAL_ALLOCATOR.first_unused.get();
+        writeln!($display_text, "----------------------------");
+
+        loop {
+            writeln!(
+                $display_text,
+                "\nStart: {}\nSize: {}",
+                current_unused.address, current_unused.size
+            );
+            match current_unused.next() {
+                Ok(next) => {
+                    current_unused = next;
+                }
+                _ => break,
+            }
+        }
+    };
+}
+
 fn start(boot_info: &mut BootInfo) -> ! {
     let mut display_text = match &mut boot_info.framebuffer {
         Optional::Some(frame_buffer) => DisplayTextManager::new(frame_buffer),
@@ -21,20 +56,13 @@ fn start(boot_info: &mut BootInfo) -> ! {
     };
 
     display_text.write(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\n");
-    writeln!(display_text, "Hello world!").unwrap();
 
     init_heap(
         &boot_info.memory_regions,
         boot_info.physical_memory_offset.into_option().unwrap(),
         &mut display_text,
     );
-    writeln!(display_text, "Hello world!").unwrap();
 
-    let b = Box::new("hello");
-    writeln!(display_text, "Hello world! {}", *b).unwrap();
-    drop(b);
-    let b = Box::new("hello");
-    writeln!(display_text, "Hello world! {}", *b).unwrap();
     loop {}
 }
 
@@ -43,6 +71,6 @@ entry_point!(start, config = &CONFIG);
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     // should trigger triple fault
-    // unsafe { *(0x0 as *mut u8) = 0 };
+    unsafe { *(0x0 as *mut u8) = 0 };
     loop {}
 }
