@@ -1,10 +1,13 @@
+#![no_std]
+#![feature(negative_impls, min_specialization)]
+
 use core::{
     any::{Any, TypeId},
     cell::RefCell,
     fmt::{Debug, Display},
     marker::PhantomData,
 };
-
+extern crate alloc;
 use alloc::{collections::btree_map::BTreeMap, sync::Arc, sync::Weak};
 
 pub struct InterfacesManager {
@@ -58,6 +61,16 @@ impl<T> !Clone for InterfaceHandle<T> {}
 impl<T> !Copy for InterfaceHandle<T> {}
 impl<T> !Debug for InterfaceHandle<T> {}
 impl<T> !Display for InterfaceHandle<T> {}
+
+impl<T> InterfaceHandle<T> {
+    pub fn new() -> Self {
+        Self {
+            id: 0,
+            store: Weak::new(),
+            _phantom: PhantomData,
+        }
+    }
+}
 
 pub trait InterfaceInputOutput {
     type Input;

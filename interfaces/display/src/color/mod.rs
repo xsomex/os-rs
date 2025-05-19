@@ -1,5 +1,5 @@
-use crate::memory::vec::HeaplessVec as Vec;
 use bootloader_api::info::PixelFormat;
+use alloc::vec::Vec;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
@@ -36,7 +36,7 @@ impl Color {
         (self.b, self.g, self.r, self.a)
     }
 
-    pub fn to(self, px_format: PixelFormat, _bytes_per_px: usize) -> Vec<u8, 8> {
+    pub fn to(self, px_format: PixelFormat, _bytes_per_px: usize) -> Vec<u8> {
         let mut output = Vec::new();
 
         match px_format {

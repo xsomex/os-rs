@@ -1,14 +1,14 @@
 use core::{
     alloc::{GlobalAlloc, Layout},
-    cell::Cell,
-    cmp::max,
+    cell::{Cell, RefCell},
+    cmp::{max, min},
 };
+
 pub const WORD_SIZE: usize = size_of::<usize>();
 
 pub struct GlobalAllocator {
     pub heap_start: Cell<usize>,
     pub heap_end: Cell<usize>,
-    pub first_unused: Cell<UnusedRegion>,
 }
 
 unsafe impl Sync for GlobalAllocator {}
@@ -17,7 +17,6 @@ unsafe impl Sync for GlobalAllocator {}
 pub static GLOBAL_ALLOCATOR: GlobalAllocator = GlobalAllocator {
     heap_end: Cell::new(0),
     heap_start: Cell::new(0),
-    first_unused: Cell::new(UnusedRegion::new()),
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -118,12 +117,22 @@ impl UnusedRegion {
     }
 }
 
+impl GlobalAllocator {
+    fn set_first_unused(&self, unused: UnusedRegion) {
+        unsafe { *(self.heap_start.get() as *mut usize) = unused.address; }
+    }
+    pub fn get_first_unused(&self) -> UnusedRegion {
+        let address = unsafe { (self.heap_start.get() as *mut usize).read() };
+        UnusedRegion::at_address(address)
+    }
+}
+
 unsafe impl GlobalAlloc for GlobalAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let layout = unsafe {
             Layout::from_size_align_unchecked(max(2 * WORD_SIZE, layout.size()), layout.align())
         };
-        let mut current_region = self.first_unused.get();
+        let mut current_region = self.get_first_unused();
 
         loop {
             match current_region.holds(layout) {
@@ -141,16 +150,14 @@ unsafe impl GlobalAlloc for GlobalAllocator {
                                 UnusedRegion::at_address(prev).set_next(ptr + layout.size());
                             }
                             None => {
-                                self.first_unused
-                                    .set(UnusedRegion::at_address(ptr + layout.size()));
+                                self.set_first_unused(UnusedRegion::at_address(ptr + layout.size()));
                             }
                         }
                     } else {
                         current_region
                             .set_size(ptr - current_region.address)
                             .set_next(ptr + layout.size());
-                        self.first_unused
-                            .set(UnusedRegion::at_address(current_region.address));
+                        self.set_first_unused(UnusedRegion::at_address(current_region.address));
                     }
 
                     return ptr as *mut u8;
@@ -164,7 +171,7 @@ unsafe impl GlobalAlloc for GlobalAllocator {
             Layout::from_size_align_unchecked(max(2 * WORD_SIZE, layout.size()), layout.align())
         };
         let ptr = ptr as usize;
-        let mut current_region = self.first_unused.get();
+        let mut current_region = self.get_first_unused();
 
         loop {
             if current_region.address > ptr {
@@ -179,7 +186,7 @@ unsafe impl GlobalAlloc for GlobalAllocator {
                                 .set_size(layout.size())
                                 .set_next(current_region.address);
                         }
-                        self.first_unused.set(UnusedRegion::at_address(ptr));
+                        self.set_first_unused(UnusedRegion::at_address(ptr));
                     }
                     Some(prev) => {
                         let mut prev = UnusedRegion::at_address(prev);
@@ -206,9 +213,6 @@ unsafe impl GlobalAlloc for GlobalAllocator {
                     }
                 }
 
-                self.first_unused
-                    .set(UnusedRegion::at_address(self.first_unused.get().address));
-
                 return;
             } else {
                 current_region = current_region.next().unwrap();
@@ -222,7 +226,7 @@ unsafe impl GlobalAlloc for GlobalAllocator {
                 as usize;
         let ptr = ptr as usize;
 
-        for i in 0..layout.size() {
+        for i in 0..min(layout.size(), new_size) {
             unsafe {
                 *((new_ptr + i) as *mut u8) = ((ptr + i) as *mut u8).read();
             }
@@ -237,9 +241,28 @@ unsafe impl GlobalAlloc for GlobalAllocator {
 pub fn init_glob_alloc(heap_start: usize, heap_end: usize) {
     GLOBAL_ALLOCATOR.heap_start.set(heap_start);
     GLOBAL_ALLOCATOR.heap_end.set(heap_end);
-    GLOBAL_ALLOCATOR.first_unused.set(
-        *UnusedRegion::at_address(heap_start)
-            .set_size(heap_end - heap_start)
-            .set_next(0),
-    )
+    let unused = *UnusedRegion::at_address(heap_start + WORD_SIZE)
+        .set_size(heap_end - heap_start - WORD_SIZE)
+        .set_next(0);
+
+    GLOBAL_ALLOCATOR.set_first_unused(unused);
+}
+
+#[macro_export]
+macro_rules! debug_global_allocator {
+    ($display_text: expr) => {
+        let mut current = GLOBAL_ALLOCATOR.get_first_unused();
+        writeln!($display_text, "-------------------------");
+        loop {
+            writeln!(
+                $display_text,
+                "Begin: {}\nSize: {}",
+                current.address, current.size
+            );
+            current = match current.next() {
+                Ok(v) => v,
+                _ => break,
+            }
+        }
+    };
 }

@@ -1,10 +1,5 @@
-pub mod color;
-pub mod font;
-pub mod text;
-
 use bootloader_api::info::{FrameBuffer, PixelFormat};
-use color::Color;
-use font::Char;
+use super::color::Color;
 
 #[derive(Debug)]
 pub struct DisplayManager {
@@ -25,7 +20,9 @@ impl DisplayManager {
         let bytes_per_px = info.bytes_per_pixel;
         let px_format = info.pixel_format;
 
-        let buffer = frame_buffer.buffer_mut().as_ptr() as usize;
+        let buffer = frame_buffer.buffer_mut();
+        buffer.fill(0);
+        let buffer = buffer.as_ptr() as usize;
 
         DisplayManager {
             buffer,
@@ -51,19 +48,5 @@ impl DisplayManager {
         }
 
         Ok(())
-    }
-
-    pub fn write_char(&self, x: usize, y: usize, c: Char<32, 32>) {
-        let start = (x, y);
-        for (y, line) in c.bytes().into_iter().enumerate() {
-            for (x, byte) in line.into_iter().enumerate() {
-                if byte {
-                    let _ =
-                        self.set_pixel(start.0 + x, start.1 + y, Color::from_rgb(255, 255, 255));
-                } else {
-                    let _ = self.set_pixel(start.0 + x, start.1 + y, Color::from_rgb(0, 0, 0));
-                }
-            }
-        }
     }
 }
