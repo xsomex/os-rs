@@ -1,21 +1,19 @@
 #![no_std]
 #![no_main]
 
-extern crate alloc;
-
-use core::{alloc::Layout, fmt::{Debug, Write}};
-
-use alloc::{
-    boxed::Box, string::String, sync::Arc, vec::Vec, alloc::GlobalAlloc
-};
+use alloc::{boxed::Box, string::ToString};
 use bootloader_api::{BootInfo, BootloaderConfig, config::Mapping, entry_point, info::Optional};
-use itf_display::{
-    font::{self, Font},
-    text::{DisplayTextHandle, DisplayTextManager},
+use kernel::{
+    display::{
+        font::{Font, GetChar, monospace::monospace},
+        manager::{DisplayManager, SetPixel, set_pixel},
+        text::{DisplayTextManager, WriteString, write_string},
+    },
+    memory::heap::init_heap,
+    objects::{Object, ObjectsManager},
 };
-use kernel::{debug_global_allocator, memory::{global_allocator::GLOBAL_ALLOCATOR, heap::init_heap}};
 
-use interfaces::{AddInterface, InterfacesManager};
+extern crate alloc;
 
 const CONFIG: BootloaderConfig = {
     let mut c = BootloaderConfig::new_default();
@@ -24,43 +22,34 @@ const CONFIG: BootloaderConfig = {
     c
 };
 
-#[derive(Debug)]
-pub struct Main;
-
 fn start(boot_info: &mut BootInfo) -> ! {
     init_heap(
         &boot_info.memory_regions,
         boot_info.physical_memory_offset.into_option().unwrap(),
     );
-
-    let manager = InterfacesManager::new();
-
-    let font = <InterfacesManager as AddInterface<Box<dyn Font>>>::add_interface(
-        &manager,
-        Arc::new(Box::new(font::monospace::Monospace)),
-    );
-
-    let mut display_text = match &mut boot_info.framebuffer {
-        Optional::Some(frame_buffer) => {
-            DisplayTextHandle(manager.add_interface(Arc::new(DisplayTextManager::new(frame_buffer, font).wrap())))
-        }
-        _ => panic!(),
+    let display_manager = match &mut boot_info.framebuffer {
+        Optional::Some(v) => DisplayManager::init(v),
+        Optional::None => panic!(),
     };
 
-    writeln!(display_text, "Hello world!");
-    debug_global_allocator!(display_text);
+    let display_manager = Object::new(Box::new(display_manager));
+    display_manager.set_fn::<SetPixel>(set_pixel);
 
-    let mut v = Vec::new();
-    for i in 0..100 {
-        v.push(i);
-    }
+    let font = Object::new(Box::new(Font));
+    font.set_fn::<GetChar>(monospace);
 
-    debug_global_allocator!(display_text);
-    drop(v);
-    debug_global_allocator!(display_text);
+    let store = ObjectsManager::new();
 
-    writeln!(display_text, "Hello world! This is a long......................... text");
+    let display_manager_handle = store.add_object(display_manager);
+    let font_handle = store.add_object(font);
 
+    let display_text = DisplayTextManager::new(font_handle, display_manager_handle);
+    let display_text = Object::new(Box::new(display_text));
+    display_text.set_fn::<WriteString>(write_string);
+
+    let display_text_handle = store.add_object(display_text);
+
+    display_text_handle.call::<WriteString>("Hello world!".to_string()).unwrap();
 
     loop {}
 }
@@ -70,6 +59,6 @@ entry_point!(start, config = &CONFIG);
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     // should trigger triple fault
-    // unsafe { *(0x0 as *mut u8) = 0 };
+    unsafe { *(0x0 as *mut u8) = 0 };
     loop {}
 }

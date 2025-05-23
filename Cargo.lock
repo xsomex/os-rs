@@ -297,18 +297,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
-name = "interfaces"
-version = "0.1.0"
-
-[[package]]
-name = "itf_display"
-version = "0.1.0"
-dependencies = [
- "bootloader_api",
- "interfaces",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -319,8 +307,6 @@ name = "kernel"
 version = "0.1.0"
 dependencies = [
  "bootloader_api",
- "interfaces",
- "itf_display",
 ]
 
 [[package]]

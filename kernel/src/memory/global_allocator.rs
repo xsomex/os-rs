@@ -1,6 +1,6 @@
 use core::{
     alloc::{GlobalAlloc, Layout},
-    cell::{Cell, RefCell},
+    cell::Cell,
     cmp::{max, min},
 };
 

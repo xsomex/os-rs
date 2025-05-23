@@ -29,7 +29,7 @@
               export ROOTD=$(pwd)
               export SHELL=${pkgs.lib.getExe pkgs.bashInteractive}
 							mkdir -p target/bootable
-              echo "Welcome!"
+              echo "Why not?"
 						'';
 					};
 				});
