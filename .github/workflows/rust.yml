@@ -17,6 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Rustcfg
-      run: rustup default nightly && rustup component add llvm-tools-preview && rustup update
+      run: rustup default nightly && rustup component add llvm-tools-preview && rustup target add x86_64-unknown-none && rustup update && mkdir -p target/bootable
     - name: Build
       run: cargo build
