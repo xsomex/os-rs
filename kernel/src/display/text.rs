@@ -1,16 +1,14 @@
 use core::any::Any;
 use core::cell::RefCell;
 
-use alloc::boxed::Box;
-use alloc::string::String;
-use alloc::sync::Arc;
+use alloc::{boxed::Box, string::String, sync::Arc};
 
 use crate::objects::{Error, ObjectFunction, ObjectHandle};
 
 use super::font::GetChar;
 
-use super::manager::SetPixel;
 use super::color::Color;
+use super::manager::SetPixel;
 
 #[derive(Debug, Clone)]
 pub struct DisplayTextManager {
@@ -74,7 +72,7 @@ impl ObjectFunction for WriteString {
 }
 
 pub fn write_string(object: &Box<dyn Any>, request: String) -> Result<(), Error> {
-    let display_text = match object.downcast_ref::<DisplayTextManager>() {
+    let display_text = match object.downcast_ref::<Arc<DisplayTextManager>>() {
         Some(v) => v.clone(),
         None => return Err(Error::TypeError),
     };

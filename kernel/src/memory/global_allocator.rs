@@ -109,7 +109,7 @@ impl UnusedRegion {
             skip = 16 + layout.align() - ((self.address + 16) % layout.align());
         }
 
-        if self.size - skip - 16 >= layout.size() {
+        if self.size >= layout.size() + skip + 2*WORD_SIZE {
             Some(self.address + skip)
         } else {
             None
@@ -252,12 +252,12 @@ pub fn init_glob_alloc(heap_start: usize, heap_end: usize) {
 macro_rules! debug_global_allocator {
     ($display_text: expr) => {
         let mut current = GLOBAL_ALLOCATOR.get_first_unused();
-        writeln!($display_text, "-------------------------");
+        writeln!($display_text, "-----");
         loop {
             writeln!(
                 $display_text,
-                "Begin: {}\nSize: {}",
-                current.address, current.size
+                "Begin: {}\nSize: {}\nNext: {:?}",
+                current.address, current.size, current.next()
             );
             current = match current.next() {
                 Ok(v) => v,

@@ -1,16 +1,15 @@
 #![no_std]
 #![no_main]
 
-use alloc::{boxed::Box, string::ToString};
+use core::fmt::Write;
+use alloc::{boxed::Box, sync::Arc};
 use bootloader_api::{BootInfo, BootloaderConfig, config::Mapping, entry_point, info::Optional};
 use kernel::{
     display::{
-        font::{Font, GetChar, monospace::monospace},
-        manager::{DisplayManager, SetPixel, set_pixel},
-        text::{DisplayTextManager, WriteString, write_string},
-    },
-    memory::heap::init_heap,
-    objects::{Object, ObjectsManager},
+        font::{monospace::monospace, Font, GetChar},
+        manager::{set_pixel, DisplayManager, SetPixel},
+        text::{write_string, DisplayTextManager, WriteString},
+    }, memory::heap::init_heap, objects::{ArcObjectHandle, Object, ObjectsManager}
 };
 
 extern crate alloc;
@@ -44,12 +43,12 @@ fn start(boot_info: &mut BootInfo) -> ! {
     let font_handle = store.add_object(font);
 
     let display_text = DisplayTextManager::new(font_handle, display_manager_handle);
-    let display_text = Object::new(Box::new(display_text));
+    let display_text = Object::new(Box::new(Arc::new(display_text)));
     display_text.set_fn::<WriteString>(write_string);
 
-    let display_text_handle = store.add_object(display_text);
+    let mut display_text_handle = ArcObjectHandle(store.add_object(display_text));
 
-    display_text_handle.call::<WriteString>("Hello world!".to_string()).unwrap();
+    writeln!(display_text_handle, "Hello world! Here a long.... string!").unwrap();
 
     loop {}
 }
@@ -59,6 +58,6 @@ entry_point!(start, config = &CONFIG);
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     // should trigger triple fault
-    unsafe { *(0x0 as *mut u8) = 0 };
+    // unsafe { *(0x0 as *mut u8) = 0 };
     loop {}
 }

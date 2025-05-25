@@ -1,9 +1,11 @@
 use core::{
     any::{Any, TypeId},
-    cell::RefCell,
+    cell::RefCell, fmt,
 };
 
-use alloc::{boxed::Box, collections::btree_map::BTreeMap, sync::Arc, sync::Weak};
+use alloc::{boxed::Box, collections::btree_map::BTreeMap, string::ToString, sync::{Arc, Weak}};
+
+use crate::display::text::WriteString;
 
 pub trait ObjectFunction {
     type Input;
@@ -118,4 +120,13 @@ pub enum Error {
 
 pub fn inbox<T>(obj: T) -> Box<T> {
     Box::new(obj)
+}
+
+pub struct ArcObjectHandle(pub Arc<ObjectHandle>);
+
+impl fmt::Write for ArcObjectHandle {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.0.call::<WriteString>(s.to_string()).unwrap();
+        Ok(())
+    }
 }
