@@ -48,7 +48,7 @@ fn start(boot_info: &mut BootInfo) -> ! {
 
     let mut display_text_handle = ArcObjectHandle(store.add_object(display_text));
 
-    writeln!(display_text_handle, "Hello world! Here a long.... string!").unwrap();
+    writeln!(display_text_handle, "Hello world!").unwrap();
 
     loop {}
 }
