@@ -48,7 +48,7 @@ fn start(boot_info: &mut BootInfo) -> ! {
 
     let mut display_text_handle = ArcObjectHandle(store.add_object(display_text));
 
-    writeln!(display_text_handle, "Hello world!").unwrap();
+    write!(display_text_handle, "Hello world!\nThe longest string I'he ever seen!!!\nAnd MORE AND MORE AND MORE Again!\nMore chars just becausethey are chars! And MORE MORE MORE MORE MORE MORE!!!!!!!!!").unwrap();
 
     loop {}
 }
