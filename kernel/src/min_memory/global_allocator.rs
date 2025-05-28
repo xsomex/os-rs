@@ -251,7 +251,7 @@ pub fn init_glob_alloc(heap_start: usize, heap_end: usize) {
 #[macro_export]
 macro_rules! debug_global_allocator {
     ($display_text: expr) => {
-        let mut current = GLOBAL_ALLOCATOR.get_first_unused();
+        let mut current = kernel::min_memory::global_allocator::GLOBAL_ALLOCATOR.get_first_unused();
         writeln!($display_text, "-----");
         loop {
             writeln!(

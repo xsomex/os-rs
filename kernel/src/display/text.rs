@@ -54,8 +54,8 @@ impl DisplayTextManager {
                 *self.cursor.borrow_mut() = new;
             } else {
                 self.write_char(
-                    self.cursor.borrow().0 * 8,  // TMP HARDCODED
-                    self.cursor.borrow().1 * 16, // TMP HARDCODED
+                    self.cursor.borrow().0 * 8,  // FIXME: TMP HARDCODED
+                    self.cursor.borrow().1 * 16, // TODO: TMP HARDCODED
                     c,
                 );
                 let new = (self.cursor.borrow().0 + 1, self.cursor.borrow().1);

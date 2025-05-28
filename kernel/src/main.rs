@@ -1,15 +1,15 @@
 #![no_std]
 #![no_main]
 
-use core::fmt::Write;
 use alloc::{boxed::Box, sync::Arc};
 use bootloader_api::{BootInfo, BootloaderConfig, config::Mapping, entry_point, info::Optional};
+use core::fmt::Write;
 use kernel::{
-    display::{
+    debug_global_allocator, display::{
         font::{monospace::monospace, Font, GetChar},
         manager::{set_pixel, DisplayManager, SetPixel},
         text::{write_string, DisplayTextManager, WriteString},
-    }, memory::heap::init_heap, objects::{ArcObjectHandle, Object, ObjectsManager}
+    }, min_memory::heap::init_heap, objects::{ArcObjectHandle, Object, ObjectsManager}
 };
 
 extern crate alloc;
@@ -26,6 +26,7 @@ fn start(boot_info: &mut BootInfo) -> ! {
         &boot_info.memory_regions,
         boot_info.physical_memory_offset.into_option().unwrap(),
     );
+
     let display_manager = match &mut boot_info.framebuffer {
         Optional::Some(v) => DisplayManager::init(v),
         Optional::None => panic!(),
@@ -48,7 +49,9 @@ fn start(boot_info: &mut BootInfo) -> ! {
 
     let mut display_text_handle = ArcObjectHandle(store.add_object(display_text));
 
-    write!(display_text_handle, "Hello world!\nThe longest string I'he ever seen!!!\nAnd MORE AND MORE AND MORE Again!\nMore chars just becausethey are chars! And MORE MORE MORE MORE MORE MORE!!!!!!!!!").unwrap();
+    // write!(display_text_handle, "Hello world!\nThe longest string I'he ever seen!!!\nAnd MORE AND MORE AND MORE Again!\nMore chars just becausethey are chars! And MORE MORE MORE MORE MORE MORE!!!!!!!!!").unwrap();
+    
+    debug_global_allocator!(display_text_handle);
 
     loop {}
 }
